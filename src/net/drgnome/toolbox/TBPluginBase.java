@@ -22,24 +22,18 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicesManager;
 import org.bukkit.configuration.file.*;
 
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.permission.Permission;
+import static net.drgnome.toolbox.Config.*;
+import static net.drgnome.toolbox.Lang.*;
+import static net.drgnome.toolbox.Util.*;
 
 public abstract class TBPluginBase extends JavaPlugin implements Listener
 {
-    public static String version = "Beta 0.2.0";
-    protected static boolean economyDisabled;
-    public static Economy economy;
-    public static Permission perms;
+    public static String version = "Beta 0.3.0";
     public static FileConfiguration config;
     public static YamlConfiguration lang;
-    public static final String LS = System.getProperty("line.separator");
-    public static final String separator[] = {new String(new char[]{(char)17}), new String(new char[]{(char)18}), new String(new char[]{(char)19}), new String(new char[]{(char)20})};
-    protected Logger log = Logger.getLogger("Minecraft");
     protected HashMap<String, ToolBox> boxes;
 
     @EventHandler
@@ -53,34 +47,17 @@ public abstract class TBPluginBase extends JavaPlugin implements Listener
         log.info("Enabling ToolBox " + version);
         boxes = new HashMap<String, ToolBox>();
         checkFiles();
-        config = getConfig();
+        reloadConf(getConfig());
+        saveConfig();
         reloadLang();
-        setDefaults();
-        economyDisabled = config.getString("economy-disabled").equalsIgnoreCase("true") ? true : false;
-        if(!economyDisabled)
+        if(!initPerms())
         {
-            RegisteredServiceProvider eco = getServer().getServicesManager().getRegistration(Economy.class);
-            if(eco != null)
-            {
-                economy = (Economy)eco.getProvider();
-            }
-            else
-            {
-                log.warning(lang("tb.misseco"));
-                getPluginLoader().disablePlugin(this);
-                return;
-            }
-        }
-        RegisteredServiceProvider perm = getServer().getServicesManager().getRegistration(Permission.class);
-        if(perm != null)
-        {
-            perms = (Permission)perm.getProvider();
-        }
-        else
-        {
-            log.warning(lang("tb.missperm"));
             getPluginLoader().disablePlugin(this);
-            return;
+        }
+        economyDisabled = config.getString("economy-disabled").equalsIgnoreCase("true") ? true : false;
+        if(!initEconomy())
+        {
+            getPluginLoader().disablePlugin(this);
         }
         loadUserData();
         getServer().getPluginManager().registerEvents(this, this);
@@ -98,138 +75,9 @@ public abstract class TBPluginBase extends JavaPlugin implements Listener
     public void reloadConfig()
     {
         super.reloadConfig();
-        config = getConfig();
-        reloadLang();
-    }
-    
-    public void reloadLang()
-    {
-        try
-        {
-            if(lang == null)
-            {
-                lang = new YamlConfiguration();
-            }
-            lang.load(new File(getDataFolder(), "lang.yml"));
-        }
-        catch(Exception e)
-        {
-            checkFiles();
-        }
-    }
-    
-    private void setDefaults()
-    {
-        setDef(config, "economy-disabled", "false");
-        setDef(config, "uf.tools", "278,285");
-        setDef(config, "uf.buy", "50000");
-        setDef(config, "uf.use", "0");
-        setDef(config, "hammer.tools", "278,285");
-        setDef(config, "hammer.buy", "500000");
-        setDef(config, "hammer.use", "0");
-        setDef(config, "hammer.maxradius", "3");
-        setDef(config, "lb.tools", "271,275,258,286,279");
-        setDef(config, "lb.buy", "20000");
-        setDef(config, "lb.use", "0.2");
-        setDef(config, "invpick.buy", "200000");
-        setDef(config, "invpick.use", "0");
-        setDef(config, "repair.use", "15");
+        reloadConf(getConfig());
         saveConfig();
-        config = getConfig();
-        setDef(lang, "tb.misseco", "ToolBox: Cannot find any vault-hooked economy plugin, disabling.");
-        setDef(lang, "tb.missperm", "ToolBox: Cannot find any vault-hooked permissions plugin, disabling.");
-        setDef(lang, "tb.enable", "ToolBox %1 enabled");
-        setDef(lang, "tb.startdisable", "Disabling ToolBox %1...");
-        setDef(lang, "tb.disable", "ToolBox %1 disabled");
-        setDef(lang, "help.title", "----- ----- ----- ToolBox Help ----- ----- -----");
-        setDef(lang, "help.help", "/tb help [x] - Show help page x");
-        setDef(lang, "help.specifichelp", "/tb help [tool] - Show help for a tool (e.g. uf)");
-        setDef(lang, "help.use.uf", "The Ultimate Fist is a super piackaxe that destroys every block (except bedrock) in no time and takes no damage!");
-        setDef(lang, "help.use.hammer", "Gods Hammer is a larger version of Ultimate Fist: It mines with range!");
-        setDef(lang, "help.use.lb", "Destroy one leave and all leaves next to it will be blown away.");
-        setDef(lang, "help.use.invpick", "Instead of dropping the blocks when mined, they are directly sent to your inventory.");
-        setDef(lang, "help.uf.buy", "/uf buy - Buy the Ultimate Fist");
-        setDef(lang, "help.uf.use", "/uf - Bind the Ultimate Fist to your current tool. Allowed tools: %1");
-        setDef(lang, "help.uf.off", "/uf off - Turn off the Ultimate Fist");
-        setDef(lang, "help.hammer.buy", "/hammer buy - Buy Gods Hammer");
-        setDef(lang, "help.hammer.use", "/hammer - Bind Gods Hammer to your current tool. Allowed tools: %1");
-        setDef(lang, "help.hammer.off", "/hammer off - Turn off Gods Hammer");
-        setDef(lang, "help.hammer.mode", "/hammer (soft/hard) - Switch between soft and hard mode. In soft mode, Gods Hammer only mines the same blocks as the one you clicked, in hard mode it mines all blocks within its radius.");
-        setDef(lang, "help.hammer.set1", "/hammer [s] - Set the hammers radius. The edge length of the cube it mines is 2*s+1.");
-        setDef(lang, "help.hammer.set2", "/hammer [x] [y] [z] - Set the hammers radius. x is left and right, y up and down, z forward and backward.");
-        setDef(lang, "help.hammer.set3", "/hammer [left] [right] [down] [up] [back] [for] - Set the hammers radius.");
-        setDef(lang, "help.lb.buy", "/tb lb buy - Buy the Leaf Blower");
-        setDef(lang, "help.lb.use", "/tb lb - Bind the Leaf Blower to your current tool. Allowed tools: %1");
-        setDef(lang, "help.lb.off", "/tb lb off - Turn off the Leaf Blower");
-        setDef(lang, "help.invpick.buy", "/invpick buy - Buy the InvPick");
-        setDef(lang, "help.invpick.toggle", "/invpick - Toggle between on and off");
-        setDef(lang, "help.invpick.mode", "/invpick (on/off) - Turn InvPicking on or off");
-        setDef(lang, "help.repair", "/repair - Fully repair your tool");
-        setDef(lang, "version", "ToolBox %1");
-        setDef(lang, "yes", "yes");
-        setDef(lang, "no", "no");
-        setDef(lang, "everything", "everything");
-        setDef(lang, "nothing", "nothing");
-        setDef(lang, "use.player", "This command can only be used by a player.");
-        setDef(lang, "use.perm", "You're not allowed to use ToolBox.");
-        setDef(lang, "money.toofew", "You don't have enough money.");
-        setDef(lang, "argument.invalid", "Invalid argument.");
-        setDef(lang, "argument.unknown", "Unknown argument.");
-        setDef(lang, "argument.few", "Too few arguments.");
-        setDef(lang, "argument.error", "Invalid command.");
-        setDef(lang, "uf.perm", "You're not allowed to use Ultimate Fist.");
-        setDef(lang, "uf.none", "You don't have an Ultimate Fist.");
-        setDef(lang, "uf.have", "You already have an Ultimate Fist.");
-        setDef(lang, "uf.bought", "You bought an Ultimate Fist.");
-        setDef(lang, "uf.set", "Bound Ultimate Fist to that tool.");
-        setDef(lang, "uf.off", "Disabled Ultimate Fist.");
-        setDef(lang, "uf.invalid", "You can't use that tool as Ultimate Fist.");
-        setDef(lang, "hammer.perm", "You're not allowed to use Gods Hammer.");
-        setDef(lang, "hammer.none", "You don't have Gods Hammer.");
-        setDef(lang, "hammer.have", "You already have Gods Hammer.");
-        setDef(lang, "hammer.bought", "You bought Gods Hammer.");
-        setDef(lang, "hammer.set", "Bound Gods Hammer to that tool.");
-        setDef(lang, "hammer.setsize", "Set the size of Gods Hammer to %1x%2x%3.");
-        setDef(lang, "hammer.off", "Disabled Gods Hammer.");
-        setDef(lang, "hammer.invalid", "You can't use that tool as Gods Hammer.");
-        setDef(lang, "hammer.amount", "You have to enter 1, 3 or 6 values.");
-        setDef(lang, "hammer.mode.perm", "You aren't allowed to use Gods Hammer in hard mode.");
-        setDef(lang, "hammer.mode.soft", "Set Gods Hammer to soft mode.");
-        setDef(lang, "hammer.mode.hard", "Set Gods Hammer to HARD mode!");
-        setDef(lang, "hammer.belowzero", "You can't use negative values!");
-        setDef(lang, "hammer.overmax", "You can't use values higher than %1!");
-        setDef(lang, "lb.perm", "You're not allowed to use the Leaf Blower.");
-        setDef(lang, "lb.none", "You don't have a Leaf Blower.");
-        setDef(lang, "lb.have", "You already have a Leaf Blower.");
-        setDef(lang, "lb.bought", "You bought a Leaf Blower.");
-        setDef(lang, "lb.set", "Bound the Leaf Blower to that tool.");
-        setDef(lang, "lb.off", "Disabled the Leaf Blower.");
-        setDef(lang, "lb.invalid", "You can't use that tool as Leaf Blower.");
-        setDef(lang, "invpick.perm", "You're not allowed to use InvPick.");
-        setDef(lang, "invpick.none", "You don't have an InvPick.");
-        setDef(lang, "invpick.have", "You already have an InvPick.");
-        setDef(lang, "invpick.bought", "You bought an InvPick.");
-        setDef(lang, "invpick.on", "InvPicking on");
-        setDef(lang, "invpick.off", "InvPicking off");
-        setDef(lang, "repair.perm", "You aren't allowed to repair your items.");
-        setDef(lang, "repair.invalid", "You can't repair this item.");
-        setDef(lang, "repair.done", "Item repaired. Cost: %1");
-        // setDef(lang, "", );
-        try
-        {
-            lang.save(new File(getDataFolder(), "lang.yml"));
-        }
-        catch(Exception e)
-        {
-        }
-    }
-    
-    private void setDef(FileConfiguration file, String path, String value)
-    {
-        if(!file.isSet(path))
-        {
-            file.set(path, value);
-        }
+        reloadLang();
     }
     
     private void checkFiles()
@@ -243,7 +91,7 @@ public abstract class TBPluginBase extends JavaPlugin implements Listener
             }
             PrintStream writer;
             File data;
-            String files[] = new String[]{"config.yml", "lang.yml", "data.db"};
+            String files[] = new String[]{"config.yml", "data.db"};
             for(int i = 0; i < files.length; i++)
             {
                 data = new File(file, files[i]);
@@ -256,6 +104,8 @@ public abstract class TBPluginBase extends JavaPlugin implements Listener
         }
         catch(Exception e)
         {
+            warn();
+            e.printStackTrace();
         }
     }
     
@@ -278,7 +128,7 @@ public abstract class TBPluginBase extends JavaPlugin implements Listener
 		}
 		catch(Exception e)
 		{
-            log.warning("[ToolBox] AN ERROR OCCURED! PLEASE SEND THE MESSAGE BELOW TO THE DEVELOPER!");
+            warn();
             e.printStackTrace();
 		}
     }
@@ -313,7 +163,7 @@ public abstract class TBPluginBase extends JavaPlugin implements Listener
 		}
 		catch(Exception e)
 		{
-            log.warning("[ToolBox] AN ERROR OCCURED! PLEASE SEND THE MESSAGE BELOW TO THE DEVELOPER!");
+            warn();
             e.printStackTrace();
         }
     }
@@ -394,7 +244,6 @@ public abstract class TBPluginBase extends JavaPlugin implements Listener
         catch(Exception e)
         {
             sendMessage(sender, lang("argument.error"), ChatColor.RED);
-            log.warning("[ToolBox] AN ERROR OCCURED! PLEASE SEND THE MESSAGE BELOW TO THE DEVELOPER!");
             e.printStackTrace();
         }
         return true;
@@ -473,271 +322,5 @@ public abstract class TBPluginBase extends JavaPlugin implements Listener
     {
         name = name.toLowerCase();
         boxes.put(name, box);
-    }
-    
-    public static void sendMessage(CommandSender sender, String message)
-    {
-        sendMessage(sender, message, "");
-    }
-    
-    public static void sendMessage(CommandSender sender, String message, ChatColor prefix)
-    {
-        sendMessage(sender, message, "" + prefix);
-    }
-    
-    public static void sendMessage(CommandSender sender, String message, String prefix)
-    {
-        if((sender == null) || (message == null))
-        {
-            return;
-        }
-        if(prefix == null)
-        {
-            prefix = "";
-        }
-        int offset = 0;
-        int xpos = 0;
-        int pos = 0;
-        String part;
-        while(true)
-        {
-            if(offset + 60 >= message.length())
-            {
-                sender.sendMessage(prefix + message.substring(offset, message.length()));
-                break;
-            }
-            part = message.substring(offset, offset + 60);
-            xpos = part.lastIndexOf(" ");
-            pos = xpos < 0 ? 60 : xpos;
-            part = message.substring(offset, offset + pos);
-            sender.sendMessage(prefix + part);
-            offset += pos + (xpos < 0 ? 0 : 1);
-        }
-    }
-    
-    public static String lang(String string, String... replacements)
-    {
-        string = lang(string);
-        if(replacements != null)
-        {
-            for(int i = 1; i <= replacements.length; i++)
-            {
-                string = string.replaceAll("%" + i, replacements[i - 1]);
-            }
-        }
-        return string;
-    }
-    
-    public static String lang(String string)
-    {
-        if((lang != null) && (lang.isSet(string)))
-        {
-            return lang.getString(string);
-        }
-        return "STRING NOT FOUND";
-    }
-    
-    public static int getConfigInt(String prefix, String suffix, CommandSender sender, boolean max)
-    {
-        String groups[] = perms.getPlayerGroups((CraftPlayer)sender);
-        return getConfigInt(prefix, suffix, groups, max);
-    }
-    
-    public static int getConfigInt(String prefix, String suffix, String groups[], boolean max)
-    {
-        int value = getConfigInt(prefix + "." + suffix);
-        int tmp;
-        for(int i = 0; i < groups.length; i++)
-        {
-            if(!config.isSet(prefix + "." + groups[i] + "." + suffix))
-            {
-                continue;
-            }
-            tmp = getConfigInt(prefix + "." + groups[i] + "." + suffix);
-            if(((max) && (tmp > value)) || ((!max) && (tmp < value)))
-            {
-                value = tmp;
-            }
-        }
-        return value;
-    }
-    
-    public static int getConfigInt(String string)
-    {
-        try
-        {
-            return Integer.parseInt(config.getString(string));
-        }
-        catch(Exception e)
-        {
-            try
-            {
-                return (int)Math.round(Double.parseDouble(config.getString(string)));
-            }
-            catch(Exception e2)
-            {
-                return 0;
-            }
-        }
-    }
-    
-    public static double getConfigDouble(String prefix, String suffix, CommandSender sender, boolean max)
-    {
-        return getConfigDouble(prefix, suffix, sender, max, 0);
-    }
-    
-    public static double getConfigDouble(String prefix, String suffix, CommandSender sender, boolean max, int digits)
-    {
-        String groups[] = perms.getPlayerGroups((CraftPlayer)sender);
-        return getConfigDouble(prefix, suffix, groups, max, digits);
-    }
-    
-    public static double getConfigDouble(String prefix, String suffix, String groups[], boolean max)
-    {
-        return getConfigDouble(prefix, suffix, groups, max, 0);
-    }
-    
-    public static double getConfigDouble(String prefix, String suffix, String groups[], boolean max, int digits)
-    {
-        double value = getConfigDouble(prefix + "." + suffix, digits);
-        double tmp;
-        for(int i = 0; i < groups.length; i++)
-        {
-            if(!config.isSet(prefix + "." + groups[i] + "." + suffix))
-            {
-                continue;
-            }
-            tmp = getConfigDouble(prefix + "." + groups[i] + "." + suffix, digits);
-            if(((max) && (tmp > value)) || ((!max) && (tmp < value)))
-            {
-                value = tmp;
-            }
-        }
-        return value;
-    }
-    
-    public static double getConfigDouble(String string, int digits)
-    {
-        try
-        {
-            return Double.parseDouble(smoothDouble(Double.parseDouble(config.getString(string)), digits));
-        }
-        catch(Exception e)
-        {
-            return 0;
-        }
-    }
-    
-    public static String smoothDouble(double d, int digits)
-    {
-        if(digits > 0)
-        {
-            String temp = "" + (int)Math.round(d * Math.pow(10, digits));
-            if(digits > temp.length())
-            {
-                digits = temp.length();
-            }
-            return (digits == temp.length() ? "0" : "") + temp.substring(0, temp.length() - digits) + "." + temp.substring(temp.length() - digits, temp.length());
-        }
-        return "" + d;
-    }
-    
-    public static boolean getConfigIsInList(String search, String prefix, String suffix, CommandSender sender, boolean max)
-    {
-        String groups[] = perms.getPlayerGroups((CraftPlayer)sender);
-        return getConfigIsInList(search, prefix, suffix, groups, max);
-    }
-    
-    public static boolean getConfigIsInList(String search, String prefix, String suffix, String groups[], boolean max)
-    {
-        search = search.toLowerCase();
-        String val = config.getString(prefix + "." + suffix);
-        if(val != null)
-        {
-            boolean inList = false;
-            String values[] = val.trim().toLowerCase().split(",");
-            for(int j = 0; j < values.length; j++)
-            {
-                if((values[j].equals(search)) || (values[j].equals("*")))
-                {
-                    inList = true;
-                }
-            }
-            if(max == inList)
-            {
-                return inList;
-            }
-            for(int i = 0; i < groups.length; i++)
-            {
-                val = config.getString(prefix + "." + groups[i] + "." + suffix);
-                if(val != null)
-                {
-                    values = val.trim().toLowerCase().split(",");
-                    for(int j = 0; j < values.length; j++)
-                    {
-                        if((values[j].equals(search)) || (values[j].equals("*")))
-                        {
-                            inList = true;
-                        }
-                    }
-                    if(max == inList)
-                    {
-                        return inList;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-    
-    public static String getConfigList(String prefix, String suffix, CommandSender sender)
-    {
-        String groups[] = perms.getPlayerGroups((CraftPlayer)sender);
-        return getConfigList(prefix, suffix, groups);
-    }
-    
-    public static String getConfigList(String prefix, String suffix, String groups[])
-    {
-        String val = config.getString(prefix + "." + suffix);
-        if(val != null)
-        {
-            ArrayList<String> list = new ArrayList<String>();
-            String values[] = val.trim().toLowerCase().split(",");
-            for(int j = 0; j < values.length; j++)
-            {
-                if(values[j].equals("*"))
-                {
-                    return lang("everything");
-                }
-                list.add(values[j]);
-            }
-            for(int i = 0; i < groups.length; i++)
-            {
-                val = config.getString(prefix + "." + groups[i] + "." + suffix);
-                if(val != null)
-                {
-                    values = val.trim().toLowerCase().split(",");
-                    for(int j = 0; j < values.length; j++)
-                    {
-                        if(values[j].equals("*"))
-                        {
-                            return lang("everything");
-                        }
-                        list.add(values[j]);
-                    }
-                }
-            }
-            String all[] = list.toArray(new String[0]);
-            if(all.length > 0)
-            {
-                String ret = all[0];
-                for(int i = 1; i < all.length; i++)
-                {
-                    ret += "," + all[i];
-                }
-                return ret;
-            }
-        }
-        return lang("nothing");
     }
 }

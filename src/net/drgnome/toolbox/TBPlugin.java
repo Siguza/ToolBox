@@ -23,8 +23,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.permission.Permission;
+import static net.drgnome.toolbox.Config.*;
+import static net.drgnome.toolbox.Lang.*;
+import static net.drgnome.toolbox.Util.*;
 
 public class TBPlugin extends TBPluginBase implements Listener
 {
@@ -307,14 +308,13 @@ public class TBPlugin extends TBPluginBase implements Listener
             sendMessage(sender, lang("repair.invalid"), ChatColor.RED);
             return;
         }
-        double price = TBPlugin.getConfigDouble("repair", "use", sender, false) * (double)item.count * (double)item.getData();
-        if(!TBPlugin.economy.has(player.name, price))
+        double price = getConfigDouble("repair", "use", sender, false) * (double)item.count * (double)item.getData();
+        if(!moneyHasTake(player.name, price))
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("money.toofew"), ChatColor.RED);
+            sendMessage(sender, lang("money.toofew"), ChatColor.RED);
             return;
         }
-        TBPlugin.economy.withdrawPlayer(player.name, price);
         item.setData(0);
-        TBPlugin.sendMessage(sender, TBPlugin.lang("repair.done", "" + smoothDouble(price, 2)), ChatColor.GREEN);
+        sendMessage(sender, lang("repair.done", "" + smoothDouble(price, 2)), ChatColor.GREEN);
     }
 }

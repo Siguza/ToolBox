@@ -26,12 +26,12 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.configuration.file.*;
 
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.permission.Permission;
+import static net.drgnome.toolbox.Config.*;
+import static net.drgnome.toolbox.Lang.*;
+import static net.drgnome.toolbox.Util.*;
 
 public class ToolBox
 {
-    private static final String cut = TBPlugin.separator[1];
     public boolean hasUF;
     protected int ufTool;
     public boolean hasHammer;
@@ -45,12 +45,12 @@ public class ToolBox
     
     public ToolBox(String username)
     {
-        this((String[])TBPlugin.perms.getPlayerGroups((String)null, username));
+        this(getPlayerGroups(username));
     }
     
     public ToolBox(String groups[])
     {
-        if(TBPlugin.economyDisabled)
+        if(economyDisabled)
         {
             hasUF = true;
             hasHammer = true;
@@ -59,10 +59,10 @@ public class ToolBox
         }
         else
         {
-            hasUF = TBPlugin.getConfigDouble("uf", "buy", groups, false) <= 0.0D ? true : false;
-            hasHammer = TBPlugin.getConfigDouble("hammer", "buy", groups, false) <= 0.0D ? true : false;
-            hasLB = TBPlugin.getConfigDouble("lb", "buy", groups, false) <= 0.0D ? true : false;
-            hasInvpick = TBPlugin.getConfigDouble("invpick", "buy", groups, false) <= 0.0D ? true : false;
+            hasUF = getConfigDouble("uf", "buy", groups, false) <= 0.0D ? true : false;
+            hasHammer = getConfigDouble("hammer", "buy", groups, false) <= 0.0D ? true : false;
+            hasLB = getConfigDouble("lb", "buy", groups, false) <= 0.0D ? true : false;
+            hasInvpick = getConfigDouble("invpick", "buy", groups, false) <= 0.0D ? true : false;
         }
         ufTool = -1;
         hammerAll = false;
@@ -79,7 +79,7 @@ public class ToolBox
     
     public ToolBox(String username, String data[], int offset)
     {
-        this((String[])TBPlugin.perms.getPlayerGroups((String)null, username), data, offset);
+        this(getPlayerGroups(username), data, offset);
     }
     
     public ToolBox(String groups[], String data[])
@@ -95,7 +95,7 @@ public class ToolBox
             String blubb[];
             for(offset++; offset < data.length; offset++)
             {
-                blubb = data[offset].split(cut);
+                blubb = data[offset].split(separator[1]);
                 if(blubb[0].equals("uf") && (blubb.length >= 3))
                 {
                     hasUF = blubb[1].equals("1") || hasUF;
@@ -159,46 +159,46 @@ public class ToolBox
         String string;
         ArrayList<String> list = new ArrayList<String>();
         list.add("new");
-        list.add("uf" + cut + (hasUF ? "1" : "0") + cut + ufTool);
-        string = "hammer" + cut + (hasHammer ? "1" : "0") + cut + (hammerAll ? "1" : "0");
+        list.add("uf" + separator[1] + (hasUF ? "1" : "0") + separator[1] + ufTool);
+        string = "hammer" + separator[1] + (hasHammer ? "1" : "0") + separator[1] + (hammerAll ? "1" : "0");
         for(int i = 0; i < hammerRadius.length; i++)
         {
-            string += cut + hammerRadius[i];
+            string += separator[1] + hammerRadius[i];
         }
         list.add(string);
-        list.add("lb" + cut + (hasLB ? "1" : "0") + cut + lbTool);
-        list.add("invpick" + cut + (hasInvpick ? "1" : "0") + cut + (invpickActive ? "1" : "0"));
+        list.add("lb" + separator[1] + (hasLB ? "1" : "0") + separator[1] + lbTool);
+        list.add("invpick" + separator[1] + (hasInvpick ? "1" : "0") + separator[1] + (invpickActive ? "1" : "0"));
         return list.toArray(new String[0]);
     }
     
     private boolean canBeUF(int i, String name)
     {
-        return canBeUF(i, (String[])TBPlugin.perms.getPlayerGroups((String)null, name));
+        return canBeUF(i, getPlayerGroups(name));
     }
     
     private boolean canBeUF(int i, String groups[])
     {
-        return (i == -1) || TBPlugin.getConfigIsInList("" + i, "uf", "tools", groups, true);
+        return (i == -1) || getConfigIsInList("" + i, "uf", "tools", groups, true);
     }
     
     private boolean canBeHammer(int i, String name)
     {
-        return canBeHammer(i, (String[])TBPlugin.perms.getPlayerGroups((String)null, name));
+        return canBeHammer(i, getPlayerGroups(name));
     }
     
     private boolean canBeHammer(int i, String groups[])
     {
-        return (i == -1) || TBPlugin.getConfigIsInList("" + i, "hammer", "tools", groups, true);
+        return (i == -1) || getConfigIsInList("" + i, "hammer", "tools", groups, true);
     }
     
     private boolean canBeLB(int i, String name)
     {
-        return canBeLB(i, (String[])TBPlugin.perms.getPlayerGroups((String)null, name));
+        return canBeLB(i, getPlayerGroups(name));
     }
     
     private boolean canBeLB(int i, String groups[])
     {
-        return (i == -1) || TBPlugin.getConfigIsInList("" + i, "lb", "tools", groups, true);
+        return (i == -1) || getConfigIsInList("" + i, "lb", "tools", groups, true);
     }
     
     private boolean isUF(int i, String name)
@@ -405,13 +405,10 @@ public class ToolBox
         {
             return;
         }
-        double price = TBPlugin.getConfigDouble("invpick", "use", Bukkit.getPlayerExact(player.name), false);
-        if((invpickActive) && ((price <= 0.0D) || (TBPlugin.economy.has(player.name, price))) && (player.inventory.pickup(item)))
+        double price = getConfigDouble("invpick", "use", Bukkit.getPlayerExact(player.name), false);
+        if((invpickActive) && moneyHas(player.name, price) && (player.inventory.pickup(item)))
         {
-            if(price > 0.0D)
-            {
-                TBPlugin.economy.withdrawPlayer(player.name, price);
-            }
+            moneyTake(player.name, price);
             return;
         }
         EntityItem entityitem = new EntityItem(player.world, x + 0.5D, y, z + 0.5D, item);
@@ -425,42 +422,40 @@ public class ToolBox
     {
         if(hasUF)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("uf.have"), ChatColor.RED);
+            sendMessage(sender, lang("uf.have"), ChatColor.RED);
             return;
         }
         EntityPlayer player = ((CraftPlayer)sender).getHandle();
-        double price = TBPlugin.getConfigDouble("uf", "buy", sender, false);
-        if(!TBPlugin.economy.has(player.name, price))
+        if(!moneyHasTake(player.name, getConfigDouble("uf", "buy", sender, false)))
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("money.toofew"), ChatColor.RED);
+            sendMessage(sender, lang("money.toofew"), ChatColor.RED);
             return;
         }
-        TBPlugin.economy.withdrawPlayer(player.name, price);
         hasUF = true;
-        TBPlugin.sendMessage(sender, TBPlugin.lang("uf.bought"), ChatColor.GREEN);
+        sendMessage(sender, lang("uf.bought"), ChatColor.GREEN);
     }
     
     public void setUF(CommandSender sender, int i)
     {
         if(!hasUF)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("uf.none"), ChatColor.RED);
+            sendMessage(sender, lang("uf.none"), ChatColor.RED);
             return;
         }
         EntityPlayer player = ((CraftPlayer)sender).getHandle();
         if(!canBeUF(i, player.name))
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("uf.invalid"), ChatColor.RED);
+            sendMessage(sender, lang("uf.invalid"), ChatColor.RED);
             return;
         }
         ufTool = i;
         if(i == -1)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("uf.off"), ChatColor.GREEN);
+            sendMessage(sender, lang("uf.off"), ChatColor.GREEN);
         }
         else
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("uf.set"), ChatColor.GREEN);
+            sendMessage(sender, lang("uf.set"), ChatColor.GREEN);
         }
     }
     
@@ -468,42 +463,40 @@ public class ToolBox
     {
         if(hasHammer)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("hammer.have"), ChatColor.RED);
+            sendMessage(sender, lang("hammer.have"), ChatColor.RED);
             return;
         }
         EntityPlayer player = ((CraftPlayer)sender).getHandle();
-        double price = TBPlugin.getConfigDouble("hammer", "buy", sender, false);
-        if(!TBPlugin.economy.has(player.name, price))
+        if(!moneyHasTake(player.name, getConfigDouble("hammer", "buy", sender, false)))
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("money.toofew"), ChatColor.RED);
+            sendMessage(sender, lang("money.toofew"), ChatColor.RED);
             return;
         }
-        TBPlugin.economy.withdrawPlayer(player.name, price);
         hasHammer = true;
-        TBPlugin.sendMessage(sender, TBPlugin.lang("hammer.bought"), ChatColor.GREEN);
+        sendMessage(sender, lang("hammer.bought"), ChatColor.GREEN);
     }
     
     public void setHammer(CommandSender sender, int i)
     {
         if(!hasHammer)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("hammer.none"), ChatColor.RED);
+            sendMessage(sender, lang("hammer.none"), ChatColor.RED);
             return;
         }
         EntityPlayer player = ((CraftPlayer)sender).getHandle();
         if(!canBeHammer(i, player.name))
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("hammer.invalid"), ChatColor.RED);
+            sendMessage(sender, lang("hammer.invalid"), ChatColor.RED);
             return;
         }
         hammerTool = i;
         if(i == -1)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("hammer.off"), ChatColor.GREEN);
+            sendMessage(sender, lang("hammer.off"), ChatColor.GREEN);
         }
         else
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("hammer.set"), ChatColor.GREEN);
+            sendMessage(sender, lang("hammer.set"), ChatColor.GREEN);
         }
     }
     
@@ -511,7 +504,7 @@ public class ToolBox
     {
         if((param == null) || (param.length == 0))
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("argument.invalid"), ChatColor.RED);
+            sendMessage(sender, lang("argument.invalid"), ChatColor.RED);
             return;
         }
         else if(param.length < 3)
@@ -539,7 +532,7 @@ public class ToolBox
         }
         boolean overmax = false;
         boolean belowzero = false;
-        int max = TBPlugin.getConfigInt("hammer", "maxradius", sender, true);
+        int max = getConfigInt("hammer", "maxradius", sender, true);
         max = max < 0 ? 0 : max;
         for(int i = 0; i < 6; i++)
         {
@@ -556,55 +549,53 @@ public class ToolBox
         }
         if(belowzero)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("hammer.belowzero"), ChatColor.RED);
+            sendMessage(sender, lang("hammer.belowzero"), ChatColor.RED);
         }
         if(overmax)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("hammer.overmax", "" + max), ChatColor.RED);
+            sendMessage(sender, lang("hammer.overmax", "" + max), ChatColor.RED);
         }
-        TBPlugin.sendMessage(sender, TBPlugin.lang("hammer.setsize", "" + (1 + hammerRadius[0] + hammerRadius[1]), "" + (1 + hammerRadius[2] + hammerRadius[3]), "" + (1 + hammerRadius[4] + hammerRadius[5])), ChatColor.GREEN);
+        sendMessage(sender, lang("hammer.setsize", "" + (1 + hammerRadius[0] + hammerRadius[1]), "" + (1 + hammerRadius[2] + hammerRadius[3]), "" + (1 + hammerRadius[4] + hammerRadius[5])), ChatColor.GREEN);
     }
     
     public void buyLB(CommandSender sender)
     {
         if(hasLB)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("lb.have"), ChatColor.RED);
+            sendMessage(sender, lang("lb.have"), ChatColor.RED);
             return;
         }
         EntityPlayer player = ((CraftPlayer)sender).getHandle();
-        double price = TBPlugin.getConfigDouble("lb", "buy", sender, false);
-        if(!TBPlugin.economy.has(player.name, price))
+        if(!moneyHasTake(player.name, getConfigDouble("lb", "buy", sender, false)))
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("money.toofew"), ChatColor.RED);
+            sendMessage(sender, lang("money.toofew"), ChatColor.RED);
             return;
         }
-        TBPlugin.economy.withdrawPlayer(player.name, price);
         hasLB = true;
-        TBPlugin.sendMessage(sender, TBPlugin.lang("lb.bought"), ChatColor.GREEN);
+        sendMessage(sender, lang("lb.bought"), ChatColor.GREEN);
     }
     
     public void setLB(CommandSender sender, int i)
     {
         if(!hasLB)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("lb.none"), ChatColor.RED);
+            sendMessage(sender, lang("lb.none"), ChatColor.RED);
             return;
         }
         EntityPlayer player = ((CraftPlayer)sender).getHandle();
         if(!canBeLB(i, player.name))
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("lb.invalid"), ChatColor.RED);
+            sendMessage(sender, lang("lb.invalid"), ChatColor.RED);
             return;
         }
         lbTool = i;
         if(i == -1)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("lb.off"), ChatColor.GREEN);
+            sendMessage(sender, lang("lb.off"), ChatColor.GREEN);
         }
         else
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("lb.set"), ChatColor.GREEN);
+            sendMessage(sender, lang("lb.set"), ChatColor.GREEN);
         }
     }
     
@@ -612,77 +603,34 @@ public class ToolBox
     {
         if(hasInvpick)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("invpick.have"), ChatColor.RED);
+            sendMessage(sender, lang("invpick.have"), ChatColor.RED);
             return;
         }
         EntityPlayer player = ((CraftPlayer)sender).getHandle();
-        double price = TBPlugin.getConfigDouble("invpick", "buy", sender, false);
-        if(!TBPlugin.economy.has(player.name, price))
+        if(!moneyHasTake(player.name, getConfigDouble("invpick", "buy", sender, false)))
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("money.toofew"), ChatColor.RED);
+            sendMessage(sender, lang("money.toofew"), ChatColor.RED);
             return;
         }
-        TBPlugin.economy.withdrawPlayer(player.name, price);
         hasInvpick = true;
-        TBPlugin.sendMessage(sender, TBPlugin.lang("invpick.bought"), ChatColor.GREEN);
+        sendMessage(sender, lang("invpick.bought"), ChatColor.GREEN);
     }
     
     public void setInvpick(CommandSender sender, boolean mode)
     {
         if(!hasInvpick)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("invpick.none"), ChatColor.RED);
+            sendMessage(sender, lang("invpick.none"), ChatColor.RED);
             return;
         }
         invpickActive = mode;
         if(mode)
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("invpick.on"), ChatColor.GREEN);
+            sendMessage(sender, lang("invpick.on"), ChatColor.GREEN);
         }
         else
         {
-            TBPlugin.sendMessage(sender, TBPlugin.lang("invpick.off"), ChatColor.GREEN);
+            sendMessage(sender, lang("invpick.off"), ChatColor.GREEN);
         }
-    }
-    
-    public static int tryParse(String s, int fail)
-    {
-        try
-        {
-            return Integer.parseInt(s);
-        }
-        catch(Exception e)
-        {
-        }
-        return fail;
-    }
-    
-    public static Object invoke(Object o, String m, Object... params)
-    {
-        return invoke(o.getClass(), o, m, params);
-    }
-    
-    public static Object invoke(Class<?> c, Object o, String m, Object... params)
-    {
-        if(c == null)
-        {
-            return null;
-        }
-        Method methods[] = c.getDeclaredMethods();
-        for(int i = 0; i < methods.length; i++)
-        {
-            if(methods[i].getName().equals(m))
-            {
-                try
-                {
-                    methods[i].setAccessible(true);
-                    return methods[i].invoke(o, params);
-                }
-                catch(Exception e)
-                {
-                }
-            }
-        }
-        return invoke(c.getSuperclass(), o, m, params);
     }
 }
