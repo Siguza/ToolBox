@@ -1,0 +1,70 @@
+name: ToolBox
+main: net.drgnome.toolbox.TBPlugin
+version: 0.2.0
+author: Siguza
+depend: [Vault]
+commands:
+    tb:
+        description: ToolBox
+        permissions: toolbox.use
+        usage: /tb
+    toolbox:
+        description: ToolBox
+        permissions: toolbox.use
+        usage: /tb
+    uf:
+        description: Ultimate Fist
+        permissions: toolbox.use.uf
+        usage: /uf help
+    ultimatefist:
+        description: Ultimate Fist
+        permissions: toolbox.use.uf
+        usage: /uf help
+    h:
+        description: Gods Hammer
+        permissions: toolbox.use.hammer
+        usage: /hammer help
+    hammer:
+        description: Gods Hammer
+        permissions: toolbox.use.hammer
+        usage: /hammer help
+    leafblower:
+        description: Leaf Blower
+        permissions: toolbox.use.lb
+        usage: /lb help
+    invpick:
+        description: InvPick
+        permissions: toolbox.use.invpick
+        usage: /invpick help
+    r:
+        description: Repair items
+        permissions: toolbox.use.repair
+        usage: /repair
+    repair:
+        description: Repair items
+        permissions: toolbox.use.repair
+        usage: /repair
+permissions:
+    toolbox.use:
+        description: Allows the basic use of ToolBox
+    toolbox.use.*:
+        description: Allows the use of all ToolBox features
+        children:
+            toolbox.use: true
+            toolbox.use.uf: true
+            toolbox.use.hammer: true
+            toolbox.use.lb: true
+            toolbox.use.invpick: true
+            toolbox.use.repair: true
+    toolbox.use.uf:
+        description: Allows the use of the Ultimate Fist
+    toolbox.use.hammer:
+        description: Allows the use of Gods Hammer
+    toolbox.use.hammer.hard:
+        description: Allows the "hard" mode of Gods Hammer
+    toolbox.use.lb:
+        description: Allows the use of Leaf Blower
+    toolbox.use.invpick:
+        description: Allows the use of InvPick
+    toolbox.use.repair:
+        description: Allows tool repairing
