@@ -178,6 +178,10 @@ public class ToolBox
     
     private boolean canBeUF(int i, String groups[])
     {
+        if(!hasPermission(groups, "toolbox.use.uf"))
+        {
+            return false;
+        }
         return (i == -1) || getConfigIsInList("" + i, "uf", "tools", groups, true);
     }
     
@@ -188,6 +192,10 @@ public class ToolBox
     
     private boolean canBeHammer(int i, String groups[])
     {
+        if(!hasPermission(groups, "toolbox.use.hammer"))
+        {
+            return false;
+        }
         return (i == -1) || getConfigIsInList("" + i, "hammer", "tools", groups, true);
     }
     
@@ -198,6 +206,10 @@ public class ToolBox
     
     private boolean canBeLB(int i, String groups[])
     {
+        if(!hasPermission(groups, "toolbox.use.lb"))
+        {
+            return false;
+        }
         return (i == -1) || getConfigIsInList("" + i, "lb", "tools", groups, true);
     }
     

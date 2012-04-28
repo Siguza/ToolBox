@@ -32,8 +32,6 @@ import static net.drgnome.toolbox.Util.*;
 public abstract class TBPluginBase extends JavaPlugin implements Listener
 {
     public static String version = "Beta 0.3.0";
-    public static FileConfiguration config;
-    public static YamlConfiguration lang;
     protected HashMap<String, ToolBox> boxes;
 
     @EventHandler
@@ -54,7 +52,7 @@ public abstract class TBPluginBase extends JavaPlugin implements Listener
         {
             getPluginLoader().disablePlugin(this);
         }
-        economyDisabled = config.getString("economy-disabled").equalsIgnoreCase("true") ? true : false;
+        economyDisabled = getConfigString("economy-disabled").equalsIgnoreCase("true") ? true : false;
         if(!initEconomy())
         {
             getPluginLoader().disablePlugin(this);

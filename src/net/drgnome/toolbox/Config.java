@@ -39,6 +39,7 @@ public class Config
         setDef("lb.tools", "271,275,258,286,279");
         setDef("lb.buy", "20000");
         setDef("lb.use", "0.2");
+        setDef("lb.maxradius", "10");
         setDef("invpick.buy", "200000");
         setDef("invpick.use", "0");
         setDef("repair.use", "15");
@@ -51,6 +52,11 @@ public class Config
         {
             config.set(path, value);
         }
+    }
+    
+    public static String getConfigString(String string)
+    {
+        return config.getString(string);
     }
     
     public static int getConfigInt(String prefix, String suffix, CommandSender sender, boolean max)

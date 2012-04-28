@@ -1,6 +1,6 @@
 name: ToolBox
 main: net.drgnome.toolbox.TBPlugin
-version: 0.2.0
+version: 0.3.0
 author: Siguza
 depend: [Vault]
 commands:

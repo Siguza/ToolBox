@@ -43,6 +43,23 @@ public class Util
         return true;
     }
     
+    public static boolean hasPermission(String username, String permission)
+    {
+        return perms == null ? false : perms.has((String)null, username, permission);
+    }
+    
+    public static boolean hasPermission(String[] groups, String permission)
+    {
+        for(int i = 0; i < groups.length; i++)
+        {
+            if(perms.groupHas((String)null, groups[i], permission))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public static String[] getPlayerGroups(String username)
     {
         return perms == null ? new String[0] : perms.getPlayerGroups((String)null, username);
