@@ -45,6 +45,7 @@ public abstract class TBPluginBase extends JavaPlugin implements Listener
         log.info("Enabling ToolBox " + version);
         boxes = new HashMap<String, ToolBox>();
         checkFiles();
+        initLang(getDataFolder());
         reloadConf(getConfig());
         saveConfig();
         reloadLang();

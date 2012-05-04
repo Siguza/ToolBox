@@ -79,15 +79,15 @@ public class ToolBox
     
     public ToolBox(String username, String data[], int offset)
     {
-        this(getPlayerGroups(username), data, offset);
+        this(username, getPlayerGroups(username), data, offset);
     }
     
-    public ToolBox(String groups[], String data[])
+    public ToolBox(String username, String groups[], String data[])
     {
-        this(groups, data, 0);
+        this(username, groups, data, 0);
     }
     
-    public ToolBox(String groups[], String data[], int offset)
+    public ToolBox(String username, String groups[], String data[], int offset)
     {
         this(groups);
         if(data[offset].equals("new"))
@@ -140,15 +140,15 @@ public class ToolBox
             {
             }
         }
-        if(!canBeUF(ufTool, groups))
+        if(!canBeUF(ufTool, username))
         {
             ufTool = -1;
         }
-        if(!canBeHammer(hammerTool, groups))
+        if(!canBeHammer(hammerTool, username))
         {
             hammerTool = -1;
         }
-        if(!canBeLB(lbTool, groups))
+        if(!canBeLB(lbTool, username))
         {
             lbTool = -1;
         }
@@ -173,44 +173,29 @@ public class ToolBox
     
     private boolean canBeUF(int i, String name)
     {
-        return canBeUF(i, getPlayerGroups(name));
-    }
-    
-    private boolean canBeUF(int i, String groups[])
-    {
-        if(!hasPermission(groups, "toolbox.use.uf"))
+        if(!hasPermission(name, "toolbox.use.uf"))
         {
             return false;
         }
-        return (i == -1) || getConfigIsInList("" + i, "uf", "tools", groups, true);
+        return (i == -1) || getConfigIsInList("" + i, "uf", "tools", getPlayerGroups(name), true);
     }
     
     private boolean canBeHammer(int i, String name)
     {
-        return canBeHammer(i, getPlayerGroups(name));
-    }
-    
-    private boolean canBeHammer(int i, String groups[])
-    {
-        if(!hasPermission(groups, "toolbox.use.hammer"))
+        if(!hasPermission(name, "toolbox.use.hammer"))
         {
             return false;
         }
-        return (i == -1) || getConfigIsInList("" + i, "hammer", "tools", groups, true);
+        return (i == -1) || getConfigIsInList("" + i, "hammer", "tools", getPlayerGroups(name), true);
     }
     
     private boolean canBeLB(int i, String name)
     {
-        return canBeLB(i, getPlayerGroups(name));
-    }
-    
-    private boolean canBeLB(int i, String groups[])
-    {
-        if(!hasPermission(groups, "toolbox.use.lb"))
+        if(!hasPermission(name, "toolbox.use.lb"))
         {
             return false;
         }
-        return (i == -1) || getConfigIsInList("" + i, "lb", "tools", groups, true);
+        return (i == -1) || getConfigIsInList("" + i, "lb", "tools", getPlayerGroups(name), true);
     }
     
     private boolean isUF(int i, String name)
@@ -218,29 +203,14 @@ public class ToolBox
         return (i == ufTool) && canBeUF(i, name);
     }
     
-    private boolean isUF(int i, String groups[])
-    {
-        return (i == ufTool) && canBeUF(i, groups);
-    }
-    
     private boolean isHammer(int i, String name)
     {
         return (i == hammerTool) && canBeHammer(i, name);
     }
     
-    private boolean isHammer(int i, String groups[])
-    {
-        return (i == hammerTool) && canBeHammer(i, groups);
-    }
-    
     private boolean isLB(int i, String name)
     {
         return (i == lbTool) && canBeLB(i, name);
-    }
-    
-    private boolean isLB(int i, String groups[])
-    {
-        return (i == lbTool) && canBeLB(i, groups);
     }
     
     public void handleClick(Player bukkitplayer, Block bukkitblock)

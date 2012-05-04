@@ -40,6 +40,7 @@ public class Lang
         catch(Exception e)
         {
             warn();
+            log.info("Path: " + dir.getAbsolutePath());
             e.printStackTrace();
         }
     }
