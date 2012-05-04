@@ -87,12 +87,10 @@ public class TBPlugin extends TBPluginBase implements Listener
         switch(page)
         {
             case 1:
+                sendMessage(sender, lang("help.price"), ChatColor.AQUA);
                 sendMessage(sender, lang("help.uf.buy"), ChatColor.AQUA);
                 sendMessage(sender, lang("help.uf.use", getConfigList("uf", "tools", sender)), ChatColor.AQUA);
                 sendMessage(sender, lang("help.uf.off"), ChatColor.AQUA);
-                sendMessage(sender, lang("help.lb.buy"), ChatColor.AQUA);
-                sendMessage(sender, lang("help.lb.use", getConfigList("lb", "tools", sender)), ChatColor.AQUA);
-                sendMessage(sender, lang("help.lb.off"), ChatColor.AQUA);
                 break;
             case 2:
                 sendMessage(sender, lang("help.hammer.buy"), ChatColor.AQUA);
@@ -108,6 +106,9 @@ public class TBPlugin extends TBPluginBase implements Listener
                 sendMessage(sender, lang("help.invpick.toggle"), ChatColor.AQUA);
                 sendMessage(sender, lang("help.invpick.mode"), ChatColor.AQUA);
                 sendMessage(sender, lang("help.repair"), ChatColor.AQUA);
+                sendMessage(sender, lang("help.lb.buy"), ChatColor.AQUA);
+                sendMessage(sender, lang("help.lb.use", getConfigList("lb", "tools", sender)), ChatColor.AQUA);
+                sendMessage(sender, lang("help.lb.off"), ChatColor.AQUA);
                 break;
             default:
                 break;
@@ -116,12 +117,229 @@ public class TBPlugin extends TBPluginBase implements Listener
     
     protected void cmdAdmin(CommandSender sender, String[] args)
     {
-        
+        if(!sender.hasPermission("toolbox.admin"))
+        {
+            sendMessage(sender, lang("admin.perm"), ChatColor.RED);
+            return;
+        }
+        if((args.length == 1) || ((args.length >= 2) && (args[1].equalsIgnoreCase("help"))))
+        {
+            sendMessage(sender, lang("admin.help.title"), ChatColor.AQUA);
+            sendMessage(sender, lang("admin.help.give"), ChatColor.AQUA);
+            sendMessage(sender, lang("admin.help.take"), ChatColor.AQUA);
+            sendMessage(sender, lang("admin.help.delete"), ChatColor.AQUA);
+            sendMessage(sender, lang("admin.help.reload"), ChatColor.AQUA);
+            return;
+        }
+        String s = args[1].trim().toLowerCase();
+        if(s.equals("give"))
+        {
+            cmdAdminGive(sender, args);
+        }
+        else if(s.equals("take"))
+        {
+            cmdAdminTake(sender, args);
+        }
+        else if(s.equals("delete"))
+        {
+            cmdAdminDelete(sender, args);
+        }
+        else if(s.equals("reload"))
+        {
+            if(!sender.hasPermission("toolbox.admin.reload"))
+            {
+                sendMessage(sender, lang("admin.perm"), ChatColor.RED);
+                return;
+            }
+            reloadConfig();
+            sendMessage(sender, lang("admin.reload"), ChatColor.GREEN);
+        }
+        else
+        {
+            sendMessage(sender, lang("argument.unknown"));
+        }
+    }
+    
+    private void cmdAdminGive(CommandSender sender, String[] args)
+    {
+        if(!sender.hasPermission("toolbox.admin.give"))
+        {
+            sendMessage(sender, lang("admin.perm"), ChatColor.RED);
+            return;
+        }
+        if(args.length < 4)
+        {
+            sendMessage(sender, lang("argument.few"), ChatColor.RED);
+            return;
+        }
+        if(!hasBox(args[2]))
+        {
+            sendMessage(sender, lang("admin.null", args[2]), ChatColor.RED);
+            return;
+        }
+        ToolBox box = getBox(args[2]);
+        String t = longname(args[3]);
+        if(t.equals("ultimatefist"))
+        {
+            if(box.hasUF)
+            {
+                sendMessage(sender, lang("admin.give.uf.has", args[2]), ChatColor.RED);
+            }
+            else
+            {
+                box.hasUF = true;
+                sendMessage(sender, lang("admin.give.uf.done", args[2]), ChatColor.GREEN);
+            }
+        }
+        else if(t.equals("hammer"))
+        {
+            if(box.hasHammer)
+            {
+                sendMessage(sender, lang("admin.give.hammer.has", args[2]), ChatColor.RED);
+            }
+            else
+            {
+                box.hasHammer = true;
+                sendMessage(sender, lang("admin.give.hammer.done", args[2]), ChatColor.GREEN);
+            }
+        }
+        else if(t.equals("leafblower"))
+        {
+            if(box.hasLB)
+            {
+                sendMessage(sender, lang("admin.give.lb.has", args[2]), ChatColor.RED);
+            }
+            else
+            {
+                box.hasLB = true;
+                sendMessage(sender, lang("admin.give.lb.done", args[2]), ChatColor.GREEN);
+            }
+        }
+        else if(t.equals("invpick"))
+        {
+            if(box.hasInvpick)
+            {
+                sendMessage(sender, lang("admin.give.invpick.has", args[2]), ChatColor.RED);
+            }
+            else
+            {
+                box.hasInvpick = true;
+                sendMessage(sender, lang("admin.give.invpick.done", args[2]), ChatColor.GREEN);
+            }
+        }
+        else
+        {
+            sendMessage(sender, lang("admin.tool.null"), ChatColor.RED);
+        }
+    }
+    
+    private void cmdAdminTake(CommandSender sender, String[] args)
+    {
+        if(!sender.hasPermission("toolbox.admin.take"))
+        {
+            sendMessage(sender, lang("admin.perm"), ChatColor.RED);
+            return;
+        }
+        if(args.length < 4)
+        {
+            sendMessage(sender, lang("argument.few"), ChatColor.RED);
+            return;
+        }
+        if(!hasBox(args[2]))
+        {
+            sendMessage(sender, lang("admin.null", args[2]), ChatColor.RED);
+            return;
+        }
+        ToolBox box = getBox(args[2]);
+        String t = longname(args[3]);
+        if(t.equals("ultimatefist"))
+        {
+            if(!box.hasUF)
+            {
+                sendMessage(sender, lang("admin.take.uf.none", args[2]), ChatColor.RED);
+            }
+            else
+            {
+                box.hasUF = false;
+                sendMessage(sender, lang("admin.take.uf.done", args[2]), ChatColor.GREEN);
+            }
+        }
+        else if(t.equals("hammer"))
+        {
+            if(!box.hasHammer)
+            {
+                sendMessage(sender, lang("admin.take.hammer.none", args[2]), ChatColor.RED);
+            }
+            else
+            {
+                box.hasHammer = false;
+                sendMessage(sender, lang("admin.take.hammer.done", args[2]), ChatColor.GREEN);
+            }
+        }
+        else if(t.equals("leafblower"))
+        {
+            if(!box.hasLB)
+            {
+                sendMessage(sender, lang("admin.take.lb.none", args[2]), ChatColor.RED);
+            }
+            else
+            {
+                box.hasLB = false;
+                sendMessage(sender, lang("admin.take.lb.done", args[2]), ChatColor.GREEN);
+            }
+        }
+        else if(t.equals("invpick"))
+        {
+            if(!box.hasInvpick)
+            {
+                sendMessage(sender, lang("admin.take.invpick.none", args[2]), ChatColor.RED);
+            }
+            else
+            {
+                box.hasInvpick = false;
+                sendMessage(sender, lang("admin.take.invpick.done", args[2]), ChatColor.GREEN);
+            }
+        }
+        else
+        {
+            sendMessage(sender, lang("admin.tool.null"), ChatColor.RED);
+        }
+    }
+    
+    private void cmdAdminDelete(CommandSender sender, String[] args)
+    {
+        if(!sender.hasPermission("toolbox.admin.delete"))
+        {
+            sendMessage(sender, lang("admin.perm"), ChatColor.RED);
+            return;
+        }
+        if(args.length < 3)
+        {
+            sendMessage(sender, lang("argument.few"), ChatColor.RED);
+            return;
+        }
+        if(!hasBox(args[2]))
+        {
+            sendMessage(sender, lang("admin.null", args[2]), ChatColor.RED);
+            return;
+        }
+        putBox(args[2], null);
+        sendMessage(sender, lang("admin.delete", args[2]), ChatColor.RED);
     }
     
     protected void cmdPrices(CommandSender sender, String[] args)
     {
-        
+        if(economyDisabled)
+        {
+            sendMessage(sender, lang("price.noeco"), ChatColor.AQUA);
+            return;
+        }
+        sendMessage(sender, lang("price.title"), ChatColor.AQUA);
+        sendMessage(sender, lang("price.uf", "" + ChatColor.GREEN, "" + ChatColor.YELLOW, "" + getConfigDouble("uf", "buy", sender, false, 2), "" + getConfigDouble("uf", "use", sender, false, 2)), ChatColor.AQUA);
+        sendMessage(sender, lang("price.hammer", "" + ChatColor.GREEN, "" + ChatColor.YELLOW, "" + getConfigDouble("hammer", "buy", sender, false, 2), "" + getConfigDouble("hammer", "use", sender, false, 2)), ChatColor.AQUA);
+        sendMessage(sender, lang("price.lb", "" + ChatColor.GREEN, "" + ChatColor.YELLOW, "" + getConfigDouble("lb", "buy", sender, false, 2), "" + getConfigDouble("lb", "use", sender, false, 2)), ChatColor.AQUA);
+        sendMessage(sender, lang("price.invpick", "" + ChatColor.GREEN, "" + ChatColor.YELLOW, "" + getConfigDouble("invpick", "buy", sender, false, 2), "" + getConfigDouble("invpick", "use", sender, false, 2)), ChatColor.AQUA);
+        sendMessage(sender, lang("price.repair", "" + ChatColor.GREEN, "" + ChatColor.YELLOW, "" + getConfigDouble("repair", "use", sender, false, 2)), ChatColor.AQUA);
     }
     
     protected void cmdUF(CommandSender sender, String[] args)

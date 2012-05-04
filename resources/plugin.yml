@@ -68,3 +68,20 @@ permissions:
         description: Allows the use of InvPick
     toolbox.use.repair:
         description: Allows tool repairing
+    toolbox.admin:
+        description: Use of the admin command.
+    toolbox.admin.*:
+        description: All admin commands.
+        children:
+            toolbox.admin.give: true
+            toolbox.admin.take: true
+            toolbox.admin.delete: true
+            toolbox.admin.reload: true
+    toolbox.admin.give:
+        description: Give users stuff.
+    toolbox.admin.take:
+        description: Take stuff away from users.
+    toolbox.admin.delete:
+        description: Delete a users ToolBox.
+    toolbox.admin.reload:
+        description: Reload the config.
