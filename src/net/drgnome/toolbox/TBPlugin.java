@@ -521,7 +521,7 @@ public class TBPlugin extends TBPluginBase implements Listener
         }
         EntityPlayer player = ((CraftPlayer)sender).getHandle();
         ItemStack item = player.inventory.getItemInHand();
-        if((item == null) || !Item.byId[item.id].g())
+        if((item == null) || !Item.byId[item.id].m())
         {
             sendMessage(sender, lang("repair.invalid"), ChatColor.RED);
             return;

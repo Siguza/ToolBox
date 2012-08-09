@@ -303,7 +303,7 @@ public class ToolBox
             {
                 try
                 {
-                    Item.byId[iid].a(item, iid, x, y, z, player);
+                    Item.byId[iid].a(item, player.world, iid, x, y, z, player);
                 }
                 catch(Exception e)
                 {
@@ -343,18 +343,18 @@ public class ToolBox
         {
             return;
         }
-        if(block.m() >= 0)
+        if(block.m(player.world, x, y, z) >= 0)
         {
             int meta = player.world.getData(x, y, z);
             boolean whatever = false;
-            Object value = invoke(block, "h");
+            Object value = invoke(block, "q_");
             if(value instanceof Boolean)
             {
                 whatever = ((Boolean)value).booleanValue();
             }
             if((whatever) && (EnchantmentManager.hasSilkTouchEnchantment(player.inventory)))
             {
-                value = invoke(block, "a_", meta);
+                value = invoke(block, "c_", meta);
                 if(value instanceof ItemStack)
                 {
                     drop(player, x, y, z, (ItemStack)value);
